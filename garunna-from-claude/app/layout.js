@@ -1,7 +1,6 @@
-import type { Metadata } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'GARUNNA — Run today. Own your runner type.',
   description:
     'GARUNNA is a running app that knows exactly what kind of runner you are. Find out now, project your pace, and challenge your friends to beat your score.',
@@ -13,11 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
