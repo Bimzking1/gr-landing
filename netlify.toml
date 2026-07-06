@@ -1,0 +1,15 @@
+# Netlify build configuration for GARUNNA landing page.
+# Next.js is configured with output: "export" (static HTML/CSS/JS),
+# so no server-side functions are needed — Netlify serves the files
+# straight from the "out/" directory.
+
+[build]
+  command   = "npm run build"
+  publish   = "out"
+
+# Catch-all redirect so deep links still work even though this is a
+# single-page app. The index.html at root handles all navigation.
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
