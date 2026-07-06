@@ -38,14 +38,14 @@ export default function ProfilingGame() {
   /* Build the data object passed to ShareCardModal */
   const shareData = result
     ? {
-        section: 'Runner Type',
-        title: result.name,
-        accentWord: null,
-        tagline: result.tagline,
-        description: result.description,
-        praise: result.praise,
-        stats: [],
-      }
+      section: 'My Runner Type:',
+      title: result.name,
+      accentWord: null,
+      tagline: result.tagline,
+      description: result.description,
+      praise: result.praise,
+      stats: [],
+    }
     : null;
 
   return (
@@ -71,9 +71,8 @@ export default function ProfilingGame() {
                 {GEAR_STEPS.map((s, i) => (
                   <div
                     key={s.id}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      i <= stepIndex ? 'bg-lime' : 'bg-grey-600'
-                    }`}
+                    className={`h-1 flex-1 rounded-full transition-colors ${i <= stepIndex ? 'bg-lime' : 'bg-grey-600'
+                      }`}
                   />
                 ))}
               </div>
