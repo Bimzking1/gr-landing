@@ -1,0 +1,16 @@
+Archetype,Issue Type,Detail
+The Early Bird / Early Morning Runner,Naming mismatch,doc1 = 'The Early Bird'; doc2/3 = 'The Early Morning Runner'.
+The Health Runner,Naming mismatch,doc1 = 'The Health Runner'; doc2/3/4 = 'The Running For Health Runner'.
+Mood Booster Runner,Naming mismatch,doc1 = 'Mood Booster Runner'; doc2/3/4 = 'The Mood Boosting Runner'.
+The Medal Hunter,Naming mismatch,doc1 = 'The Medal Hunter'; doc2/3/4 = 'The Bling Runner'.
+The Anywhere Runner,Naming mismatch,doc1 = 'The Anywhere Runner'; doc2/3 = 'The Anytime / Anyplace Runner'.
+The Ambitious Late Bloomer,Naming mismatch (within doc5 itself),"doc5's own Shoes and Gear scoring tables call it 'Ambitious Runner', while the Goal table and the final output list call it 'Ambitious Late Bloomer'. Treated as one archetype for scoring."
+The Reluctant Runner / Weekend Warrior,Naming/identity conflict,"doc5's scoring tables (Jersey/Shoes/Gear) award points to 'Reluctant Runner', but doc5's final 'possible outputs' list replaces it with '😴 The Weekend Warrior' as if it were a renamed/reworked version. Not reconciled here — Master Mapping keeps 'Reluctant Runner' and scoring targets that name."
+Start'n'Stop Runner,Originally unreachable in doc5,"doc5's original scoring tables gave this archetype zero points in every step (no path to ever win). Claude added small point contributions across Jersey/Shoes/Gear/Time/Companion/Goal so it has a real, if narrow, path to being selected (see Scoring System sheet)."
+The Pace Demon,Data mismatch,doc1 says pace 4:20/km; doc2 says 4:15/km with HR 186.
+Gear Acquisition Syndrome,Data mismatch,doc1 says 9 shoes / 4 watches / 12 jerseys / 14km weekly; doc2 says 11 shoes / 5 watches / 14 jerseys / 18km weekly.
+The Reluctant Runner,Missing rarity tier,"Has full profile (doc1) and playlist (doc4), but no rarity tier in doc2/doc3 — Claude assigned 'Uncommon'."
+"Playlist Merchant, Coffee Run Enjoyer, PB Hunter, Reward Runner",Missing rarity tier + missing playlist,Not listed in doc2/doc3 rarity tiers and have no playlist in doc4 — Claude assigned 'Legendary' tier and generated playlists/gear for consistency with the other bonus archetypes.
+"Strava CEO, Silent Assassin, Gear Acquisition Syndrome",Missing starter pack / playlist,"doc2/doc3 do assign these a 'Legendary' tier, but doc1 gives no starter pack and doc4 gives no playlist — Claude generated both."
+Pace Demon,Missing signature moves / starter pack / playlist,No signature moves or starter pack in doc1; no playlist in doc4 — Claude generated all three.
+6 legendary/bonus archetypes not in doc5's scoring flow,Design note,"Strava CEO, Pace Demon, Playlist Merchant, Coffee Run Enjoyer, Gear Acquisition Syndrome, Silent Assassin, PB Hunter, and Reward Runner were never part of doc5's original point tables at all. Claude added a small 'Legendary signature bonus' (1.3 pts) per category for each of them so the quiz can actually produce all 21 archetypes, not just the 13 originally scored (see Scoring System sheet's methodology note)."

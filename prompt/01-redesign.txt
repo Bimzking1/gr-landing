@@ -1,0 +1,110 @@
+there several adjustment here compared to existing codes. i categorized as 2 major updates:
+a. Logic and Calculation
+b. Design updates
+
+----------------------------
+
+a. Logic and Calculation Updates
+
+The logic of calculation is wider and more various. Like in runnerTypes.js is the old,
+and currently become more various like in the /runner-archetypes that have 5 different files:
+- Runner Archetypes Full Mapping - Master Mapping (1).csv (is the master mapping of category)
+- Runner Archetypes Full Mapping - Rarity Tiers.csv (basic rarity tiers)
+- Runner Archetypes Full Mapping - Scoring System.csv (scoring system for each question that will define
+the master mapping)
+- Runner Archetypes Full Mapping - Scoring Validation.csv (scoring probability ran by AI)
+- Runner Archetypes Full Mapping - Gaps & Inconsistencies.csv (gap analyzed by AI, you dont have to
+"too much" mind this. If AI has 2 confusing options, you just need to choose 1 up to you)
+
+The Questions is become more various: (6 steps of question)
+1) Choose your jersey
+- Club Jersey
+- Race Singlet
+- Oversized Tee
+- Compression Shirt
+- Finisher Event Shirt
+- Random Free Event Tee
+
+2) Pick your shoes
+- Daily Trainer
+- Carbon Race Shoes
+- Trail Shoes
+- Fashion Sneakers
+- Cheapest Shoes
+- Old Reliable Pair
+
+3) Add your gear
+- Garmin Watch
+- COROS Watch
+- Apple Watch
+- Strava on Phone
+- No Tracking
+
+4) Select your favorite running time
+- Before Sunrise
+- Morning
+- Afternoon
+- Evening
+- Midnight
+- Whenever I Can
+
+5) Pick your running companion
+- Alone
+- Running Club
+- One Friend
+- Large Group
+- My Dog
+- Whoever Invites Me
+
+6) Choose your goal
+- Lose Weight
+- Be Healthier
+- Finish My First 5K
+- Complete a Marathon
+- Collect Medals
+- Just Have Fun
+
+7) Upload Name (not counted to scoring metric)
+
+*Each coice
+
+*Rule / reports from AI:
+- For each of the 6 quiz steps, sum the points every chosen option contributes to each archetype (an option can feed more than one archetype). The archetype with the single highest total wins.
+- Tie-break rule (for determinism): if two or more archetypes are exactly tied for the highest score, the one that comes first alphabetically by title wins. The same 6 answers always score the same totals and always resolve to the same tie-break, so the same inputs always produce the same result.
+- 'Legendary signature bonus' (1.3 pts): each of the 8 Legendary archetypes has one 'signature' option in every step worth 1.3 points. Getting one or two of these alone won't win — but choosing the matching signature option in most/all 6 steps stacks enough points to beat the common/uncommon totals, which is exactly why Legendary archetypes stay rare (only reachable via a fairly specific, consistent combo).
+- This was validated by brute-force simulation of all 6×6×5×6×6×6 = 38,880 possible input combinations (see 'Scoring Validation' sheet) to confirm the resulting win-rate per archetype roughly matches its target rarity-tier probability, and that every one of the 21 archetypes is actually reachable.
+- All 38,880 possible answer combinations (6 jerseys × 6 shoes × 5 gear × 6 times × 6 companions × 6 goals) were enumerated and scored using the exact point tables in the 'Scoring System' sheet, with the same deterministic tie-break rule (alphabetical on exact ties).
+- Result: all 21 archetypes are reachable (none score zero wins). Common/Uncommon/Epic/Legendary tier totals land within ~1 point of their target ranges; Rare lands about 1 point above its target range (20.84% vs. 15-20%) -- close enough to be a reasonable, defensible approximation without further tuning.
+- Within-tier spread is uneven (e.g. Mood Booster Runner wins far more often than Weight Loss Runner, even though both are 'Common') because the source docs only ever gave a probability for the tier as a whole, never per archetype -- so no per-archetype target existed to tune against.
+
+Flow:
+- The Running Type's game later will basically the same like existing but with more question,
+choice, and the more various outputs.
+- When user answering the question, there will be a progress bar below with an image (like /card-together.png) and the end of the bar.
+- After finishing answering, there will be the output:
+--- Name
+--- Running Type from runner archetypes
+--- Random description from each runner type (there are description 1, description 2, and description 3)
+--- Card
+--- Random quote from each runner type (there are quote 1, quote 2, and quote 3)
+--- Signature moves
+--- Starter pack / gear
+--- Song playlist from Spotify embed
+
+for now, just prepare the Song Playlist for every runner types, but with the same link.
+Later i will create the playlist and change the link manually one by one.
+
+Embed is using iframe API that you can learn from link below:
+https://developer.spotify.com/documentation/embeds/tutorials/using-the-iframe-api
+
+Change the share to instagram to only in portrait mode.
+
+b. Design
+
+Currently, the design is black theme background.
+Later, there will be like a backdropped background that contained a cards.
+And the question and result's div will be wrapped by like blurry transparent box.
+
+For now i just have 5 of 22 cards arhectypes. but those 5 already stood their rarity design.
+
+and the background sharing is like "Share Background.png" and "Template Share.png".
