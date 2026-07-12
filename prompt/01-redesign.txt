@@ -7,7 +7,7 @@ b. Design updates
 a. Logic and Calculation Updates
 
 The logic of calculation is wider and more various. Like in runnerTypes.js is the old,
-and currently become more various like in the /runner-archetypes that have 5 different files:
+and currently become more various like in the folder /runner-archetypes that have 5 different files:
 - Runner Archetypes Full Mapping - Master Mapping (1).csv (is the master mapping of category)
 - Runner Archetypes Full Mapping - Rarity Tiers.csv (basic rarity tiers)
 - Runner Archetypes Full Mapping - Scoring System.csv (scoring system for each question that will define
@@ -102,9 +102,14 @@ Change the share to instagram to only in portrait mode.
 b. Design
 
 Currently, the design is black theme background.
-Later, there will be like a backdropped background that contained a cards.
+Later, there will be like a backdropped background that contained a cards. Apply this until the very bottom
+of the pages. you can use "background.webp" to be like a backdropped background.
 And the question and result's div will be wrapped by like blurry transparent box.
 
 For now i just have 5 of 22 cards arhectypes. but those 5 already stood their rarity design.
 
 and the background sharing is like "Share Background.png" and "Template Share.png".
+
+*The other game (projection and .fit uploader) still the same.
+
+The design assets, card, background are on folder /newer-design

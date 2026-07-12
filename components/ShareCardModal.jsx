@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 /* ------------------------------------------------------------------
-   Canvas dimensions + safe zones per format
+   Canvas dimensions — portrait only for runner-type, multi for others
    ------------------------------------------------------------------ */
 const FORMATS = {
   portrait: {
@@ -20,16 +20,11 @@ const FORMATS = {
   },
 };
 
-/* ------------------------------------------------------------------
-   Independent layout config per format.
-   All sizes are in canvas pixels (no ratios — tune each format freely).
-   ------------------------------------------------------------------ */
+/* ── Layout config per format (used by legacy renderer) ── */
 const LAYOUT = {
   portrait: {
-    padH: 88,          // left / right margin
-    badge: { w: 250, h: 56, dotR: 9, dotOffX: 36, textSize: 30, textOffX: 60 },
-    section: { size: 26, gapAfter: 52 },
-    badgeToSection: 110,
+    padH: 88, badge: { w: 250, h: 56, dotR: 9, dotOffX: 36, textSize: 30, textOffX: 60 },
+    section: { size: 26, gapAfter: 52 }, badgeToSection: 110,
     title: { size: 128, lineH: 1.08, gapAfter: 18 },
     tagline: { size: 36, lineH: 1.5, maxW: 0.9, gapAfter: 44 },
     stats: { labelSize: 24, valueSize: 58, rowH: 155, colGap: 0, cardPad: 52, radius: 28, lineW: 1.5 },
@@ -40,10 +35,8 @@ const LAYOUT = {
     safeLine: { color: 'rgba(200,255,0,0.07)' },
   },
   square: {
-    padH: 80,
-    badge: { w: 220, h: 48, dotR: 8, dotOffX: 32, textSize: 26, textOffX: 54 },
-    section: { size: 22, gapAfter: 38 },
-    badgeToSection: 78,
+    padH: 80, badge: { w: 220, h: 48, dotR: 8, dotOffX: 32, textSize: 26, textOffX: 54 },
+    section: { size: 22, gapAfter: 38 }, badgeToSection: 78,
     title: { size: 108, lineH: 1.08, gapAfter: 14 },
     tagline: { size: 30, lineH: 1.45, maxW: 0.9, gapAfter: 32 },
     stats: { labelSize: 20, valueSize: 48, rowH: 120, colGap: 0, cardPad: 42, radius: 24, lineW: 1.5 },
@@ -54,10 +47,8 @@ const LAYOUT = {
     safeLine: { color: 'rgba(200,255,0,0.07)' },
   },
   landscape: {
-    padH: 120,
-    badge: { w: 290, h: 62, dotR: 11, dotOffX: 40, textSize: 34, textOffX: 68 },
-    section: { size: 28, gapAfter: 44 },
-    badgeToSection: 84,
+    padH: 120, badge: { w: 290, h: 62, dotR: 11, dotOffX: 40, textSize: 34, textOffX: 68 },
+    section: { size: 28, gapAfter: 44 }, badgeToSection: 84,
     title: { size: 102, lineH: 1.07, gapAfter: 16 },
     tagline: { size: 38, lineH: 1.4, maxW: 0.75, gapAfter: 36 },
     stats: { labelSize: 24, valueSize: 56, rowH: 130, colGap: 0, cardPad: 44, radius: 22, lineW: 1.5 },
@@ -79,8 +70,7 @@ const C = {
 /* ── helpers ── */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
   ctx.quadraticCurveTo(x + w, y, x + w, y + r);
   ctx.lineTo(x + w, y + h - r);
   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
@@ -111,8 +101,211 @@ function wrapText(ctx, text, maxW) {
   return lines;
 }
 
-/* ── core renderer ── */
-function renderCard(fmtKey, data) {
+/* ── Load image as promise ── */
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+/* ── Runner-type portrait renderer (uses Share Background) ── */
+async function renderRunnerCard(data) {
+  const w = 1080, h = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Try to load share background
+  try {
+    const bg = await loadImage('/newer-design/Share Background.png');
+    ctx.drawImage(bg, 0, 0, w, h);
+  } catch {
+    ctx.fillStyle = C.ink; ctx.fillRect(0, 0, w, h);
+  }
+
+  const padH = 88;
+  const centerX = w / 2;
+
+  // Badge
+  const badgeW = 280, badgeH = 56, badgeY = 120;
+  ctx.fillStyle = 'rgba(42,42,42,0.8)';
+  roundRect(ctx, centerX - badgeW / 2, badgeY, badgeW, badgeH, badgeH / 2); ctx.fill();
+  ctx.fillStyle = C.lime;
+  ctx.beginPath(); ctx.arc(centerX - badgeW / 2 + 36, badgeY + badgeH / 2, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = C.paper;
+  ctx.font = "bold 28px 'Anton', sans-serif";
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.fillText('GARUNNA.COM', centerX - badgeW / 2 + 60, badgeY + badgeH / 2);
+
+  // Card image
+  const cardW = 440, cardH = 640;
+  const cardX = centerX - cardW / 2;
+  const cardY = 250;
+  try {
+    const cardImg = await loadImage(data.cardImage);
+    ctx.drawImage(cardImg, cardX, cardY, cardW, cardH);
+  } catch { /* skip if card not loaded */ }
+
+  // Draw stats on card (Pace | Duration | Distance)
+  if (data.stats) {
+    // Position the overlay in the lower portion of the card, well within bounds
+    const overlayH = 180; // total height of the name + stats overlay
+    const statsY = cardY + cardH - overlayH - 20; // 20px padding from card bottom edge
+    const statsW = cardW - 40; // 20px padding on each side
+    const statsX = cardX + 20;
+
+    // Semi-transparent backdrop for readability
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    roundRect(ctx, statsX - 10, statsY - 16, statsW + 20, overlayH + 10, 16);
+    ctx.fill();
+
+    // Name on card — truncate if too long
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = "bold 40px 'Anton', sans-serif";
+    ctx.textBaseline = 'top';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 10;
+    let displayName = data.name;
+    while (ctx.measureText(displayName).width > statsW - 20 && displayName.length > 3) {
+      displayName = displayName.slice(0, -1);
+    }
+    if (displayName !== data.name) displayName += '…';
+    ctx.fillText(displayName, centerX, statsY - 6);
+
+    // Runner type subtitle
+    ctx.font = "18px 'JetBrains Mono', monospace";
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(data.title, centerX, statsY + 40);
+    ctx.shadowBlur = 0;
+
+    // Divider line
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(statsX + 10, statsY + 68);
+    ctx.lineTo(statsX + statsW - 10, statsY + 68);
+    ctx.stroke();
+
+    // Stats row — Pace | Duration | Distance
+    const colW = statsW / 3;
+    const statItems = [
+      { label: 'PACE', value: data.stats.pace },
+      { label: 'DURATION', value: data.stats.duration },
+      { label: 'DISTANCE', value: data.stats.distance },
+    ];
+
+    statItems.forEach((item, i) => {
+      const cx = statsX + colW * i + colW / 2;
+
+      // Label
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = "bold 16px 'JetBrains Mono', monospace";
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.label, cx, statsY + 78);
+
+      // Value
+      ctx.fillStyle = '#ffffff';
+      ctx.font = "bold 38px 'Anton', sans-serif";
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
+      ctx.fillText(item.value, cx, statsY + 100);
+      ctx.shadowBlur = 0;
+
+      // Vertical divider between columns
+      if (i < statItems.length - 1) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(statsX + colW * (i + 1), statsY + 76);
+        ctx.lineTo(statsX + colW * (i + 1), statsY + 146);
+        ctx.stroke();
+      }
+    });
+  }
+
+  // Name + type below card
+  let curY = cardY + cardH + 30;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = C.paper;
+  ctx.font = "bold 64px 'Anton', sans-serif";
+  ctx.textBaseline = 'top';
+  ctx.fillText(data.name, centerX, curY);
+  curY += 80;
+
+  ctx.fillStyle = C.grey400;
+  ctx.font = "32px 'Space Grotesk', sans-serif";
+  ctx.fillText(`${data.emoji} ${data.title}`, centerX, curY);
+  curY += 60;
+
+  // Quote
+  curY += 20;
+  ctx.fillStyle = C.lime;
+  ctx.font = "italic 34px 'Space Grotesk', sans-serif";
+  const quoteLines = wrapText(ctx, data.quote, w - padH * 2);
+  for (const line of quoteLines) {
+    ctx.fillText(line, centerX, curY);
+    curY += 52;
+  }
+
+  // Signature Moves & Starter Pack / Gear section
+  curY += 40;
+
+  const sectionPadH = 100;
+  const colWidth = (w - sectionPadH * 2) / 2 - 16;
+  const sectionStartX = sectionPadH;
+
+  // Signature Moves column
+  if (data.signatureMoves) {
+    ctx.textAlign = 'left';
+    ctx.fillStyle = C.grey400;
+    ctx.font = "bold 20px 'JetBrains Mono', monospace";
+    ctx.textBaseline = 'top';
+    ctx.fillText('SIGNATURE MOVES', sectionStartX, curY);
+
+    const moves = data.signatureMoves.split(';').map(s => s.trim());
+    ctx.fillStyle = 'rgba(245,245,240,0.75)';
+    ctx.font = "26px 'Space Grotesk', sans-serif";
+    let moveY = curY + 36;
+    moves.forEach(move => {
+      ctx.fillText(`• ${move}`, sectionStartX, moveY);
+      moveY += 38;
+    });
+  }
+
+  // Starter Pack / Gear column
+  if (data.starterPack) {
+    const rightColX = sectionStartX + colWidth + 32;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = C.grey400;
+    ctx.font = "bold 20px 'JetBrains Mono', monospace";
+    ctx.textBaseline = 'top';
+    ctx.fillText('STARTER PACK / GEAR', rightColX, curY);
+
+    const gears = data.starterPack.split(';').map(s => s.trim());
+    ctx.fillStyle = 'rgba(245,245,240,0.75)';
+    ctx.font = "26px 'Space Grotesk', sans-serif";
+    let gearY = curY + 36;
+    gears.forEach(gear => {
+      ctx.fillText(`• ${gear}`, rightColX, gearY);
+      gearY += 38;
+    });
+  }
+
+  // Footer
+  ctx.textAlign = 'center';
+  ctx.fillStyle = C.grey500;
+  ctx.font = "24px 'JetBrains Mono', monospace";
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('garunna.app · Discover your runner card', centerX, h - 80);
+  ctx.textAlign = 'left';
+
+  return canvas;
+}
+
+/* ── Legacy renderer for projection/other cards ── */
+function renderLegacyCard(fmtKey, data) {
   const fmt = FORMATS[fmtKey];
   const L = LAYOUT[fmtKey];
   const { w, h, safeTop, safeBottom } = fmt;
@@ -120,11 +313,8 @@ function renderCard(fmtKey, data) {
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
 
-  // background
   ctx.fillStyle = C.ink; ctx.fillRect(0, 0, w, h);
   drawDotGrid(ctx, w, h);
-
-  // lime top strip
   ctx.fillStyle = C.lime; ctx.fillRect(0, 0, w, Math.round(h * 0.004));
 
   const padH = L.padH;
@@ -132,7 +322,6 @@ function renderCard(fmtKey, data) {
   const contentTop = safeTop;
   const contentBottom = h - safeBottom;
 
-  // ── badge ──
   const B = L.badge;
   const badgeY = contentTop + Math.round((contentBottom - contentTop) * 0.045);
   ctx.fillStyle = C.grey600;
@@ -144,7 +333,6 @@ function renderCard(fmtKey, data) {
   ctx.textBaseline = 'middle';
   ctx.fillText('GARUNNA', padH + B.textOffX, badgeY + B.h / 2);
 
-  // ── section label ──
   const S = L.section;
   let curY = badgeY + B.h + L.badgeToSection;
   ctx.fillStyle = C.lime;
@@ -153,7 +341,6 @@ function renderCard(fmtKey, data) {
   ctx.fillText(data.section.toUpperCase(), padH, curY);
   curY += S.size + S.gapAfter;
 
-  // ── title ──
   const T = L.title;
   ctx.font = `${T.size}px 'Anton', sans-serif`;
   ctx.textBaseline = 'top';
@@ -175,7 +362,6 @@ function renderCard(fmtKey, data) {
   }
   curY += T.gapAfter;
 
-  // ── tagline ──
   const TG = L.tagline;
   ctx.fillStyle = C.grey400;
   ctx.font = `italic ${TG.size}px 'Space Grotesk', sans-serif`;
@@ -187,7 +373,6 @@ function renderCard(fmtKey, data) {
   }
   curY += TG.gapAfter;
 
-  // ── stats card ──
   if (data.stats && data.stats.length > 0) {
     const ST = L.stats;
     const cols = data.stats.length <= 3 ? data.stats.length : 2;
@@ -195,12 +380,10 @@ function renderCard(fmtKey, data) {
     const colW = Math.floor(contentW / cols);
     const gridH = rows * ST.rowH;
     const cardH = gridH + ST.cardPad * 2;
-
     ctx.fillStyle = C.inkRaised;
     roundRect(ctx, padH, curY, contentW, cardH, ST.radius); ctx.fill();
     ctx.strokeStyle = C.grey600; ctx.lineWidth = ST.lineW;
     roundRect(ctx, padH, curY, contentW, cardH, ST.radius); ctx.stroke();
-
     for (let i = 0; i < data.stats.length; i++) {
       const col = i % cols, row = Math.floor(i / cols);
       const sx = padH + col * colW + ST.cardPad;
@@ -216,7 +399,6 @@ function renderCard(fmtKey, data) {
     curY += cardH + L.statsGapAfter;
   }
 
-  // ── description ──
   if (data.description) {
     const D = L.desc;
     ctx.fillStyle = C.paper; ctx.globalAlpha = 0.85;
@@ -231,7 +413,6 @@ function renderCard(fmtKey, data) {
     curY += D.gapAfter;
   }
 
-  // ── praise ──
   if (data.praise) {
     const P = L.praise;
     ctx.fillStyle = C.limeSoft;
@@ -244,14 +425,12 @@ function renderCard(fmtKey, data) {
     }
   }
 
-  // ── footer watermark ──
   const F = L.footer;
   ctx.fillStyle = C.grey500;
   ctx.font = `${F.size}px 'JetBrains Mono', monospace`;
   ctx.textBaseline = 'bottom';
   ctx.fillText('garunna.app · Discover your runner type', padH, contentBottom - F.fromBottom);
 
-  // ── safe zone guide lines ──
   ctx.strokeStyle = L.safeLine.color; ctx.lineWidth = 1; ctx.setLineDash([8, 8]);
   ctx.beginPath();
   ctx.moveTo(0, safeTop); ctx.lineTo(w, safeTop);
@@ -265,18 +444,26 @@ function renderCard(fmtKey, data) {
    MAIN COMPONENT
    ------------------------------------------------------------------ */
 export default function ShareCardModal({ isOpen, onClose, data }) {
+  const isRunnerType = data?.mode === 'runner-type';
   const [fmt, setFmt] = useState('portrait');
   const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [shareStatus, setShareStatus] = useState('');
   const canvasRef = useRef(null);
 
+  const activeFmt = isRunnerType ? 'portrait' : fmt;
+
   const generate = useCallback(() => {
     if (!data) return;
     setGenerating(true);
-    setTimeout(() => {
+    const doRender = async () => {
       try {
-        const canvas = renderCard(fmt, data);
+        let canvas;
+        if (isRunnerType) {
+          canvas = await renderRunnerCard(data);
+        } else {
+          canvas = renderLegacyCard(activeFmt, data);
+        }
         setPreviewUrl(canvas.toDataURL('image/png'));
         canvasRef.current = canvas;
       } catch (e) {
@@ -284,15 +471,16 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
       } finally {
         setGenerating(false);
       }
-    }, 30);
-  }, [fmt, data]);
+    };
+    doRender();
+  }, [activeFmt, data, isRunnerType]);
 
-  useEffect(() => { if (isOpen && data) generate(); }, [isOpen, fmt, data, generate]);
+  useEffect(() => { if (isOpen && data) generate(); }, [isOpen, activeFmt, data, generate]);
   useEffect(() => { if (!isOpen) { setPreviewUrl(null); setShareStatus(''); } }, [isOpen]);
 
   function getFilename() {
     const slug = (data?.title || 'garunna-result').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    return `garunna-${slug}-${fmt}.png`;
+    return `garunna-${slug}-${activeFmt}.png`;
   }
 
   async function handleDownload() {
@@ -336,7 +524,7 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
 
   if (!isOpen) return null;
 
-  const fmtCfg = FORMATS[fmt];
+  const fmtCfg = FORMATS[activeFmt];
   const previewAspect = `${fmtCfg.w} / ${fmtCfg.h}`;
 
   return (
@@ -353,7 +541,7 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
           <div>
             <p className="font-display text-lg">Share your result</p>
             <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400 mt-0.5">
-              Choose a format, then share or download
+              {isRunnerType ? 'Portrait mode for Instagram Stories' : 'Choose a format, then share or download'}
             </p>
           </div>
           <button
@@ -363,35 +551,25 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Format picker */}
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400 mb-3">Format</p>
-            <div className="grid grid-cols-3 gap-2">
-              {Object.entries(FORMATS).map(([key, f]) => (
-                <button
-                  key={key} onClick={() => setFmt(key)}
-                  className={`rounded-xl border p-3 text-center transition-colors ${
-                    fmt === key
+          {/* Format picker — only for non-runner-type */}
+          {!isRunnerType && (
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400 mb-3">Format</p>
+              <div className="grid grid-cols-3 gap-2">
+                {Object.entries(FORMATS).map(([key, f]) => (
+                  <button
+                    key={key} onClick={() => setFmt(key)}
+                    className={`rounded-xl border p-3 text-center transition-colors ${fmt === key
                       ? 'border-lime bg-lime/5 text-lime'
                       : 'border-grey-600 hover:border-grey-400 text-grey-400'
-                  }`}
-                >
-                  <span className="block text-2xl mb-1.5">{f.icon}</span>
-                  <span className="block font-mono text-[11px] font-semibold uppercase tracking-widest">{f.label}</span>
-                  <span className="block font-mono text-[10px] text-grey-500 mt-0.5">{f.sublabel}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Safe zone info — portrait only */}
-          {fmt === 'portrait' && (
-            <div className="flex items-start gap-3 rounded-xl border border-lime/20 bg-lime/5 px-4 py-3">
-              <span className="text-lime text-lg mt-0.5">⚠</span>
-              <p className="font-mono text-[11px] text-lime/80 leading-relaxed">
-                Portrait mode has safe zones at top & bottom — content stays clear of
-                Instagram / Snapchat story UI chrome.
-              </p>
+                      }`}
+                  >
+                    <span className="block text-2xl mb-1.5">{f.icon}</span>
+                    <span className="block font-mono text-[11px] font-semibold uppercase tracking-widest">{f.label}</span>
+                    <span className="block font-mono text-[10px] text-grey-500 mt-0.5">{f.sublabel}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -402,8 +580,8 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
               className="mx-auto overflow-hidden rounded-xl border border-grey-600 bg-ink"
               style={{
                 aspectRatio: previewAspect,
-                maxHeight: fmt === 'portrait' ? '55vh' : fmt === 'square' ? '42vh' : '32vh',
-                width: fmt === 'portrait' ? 'auto' : '100%',
+                maxHeight: activeFmt === 'portrait' ? '55vh' : activeFmt === 'square' ? '42vh' : '32vh',
+                width: activeFmt === 'portrait' ? 'auto' : '100%',
               }}
             >
               {generating ? (
@@ -435,8 +613,8 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
             {shareStatus === 'sharing'
               ? <span className="animate-pulse">Opening…</span>
               : shareStatus === 'done'
-              ? <span>✓ Shared!</span>
-              : <><span>↗</span> Share to…</>}
+                ? <span>✓ Shared!</span>
+                : <><span>↗</span> Share to…</>}
           </button>
         </div>
       </div>
