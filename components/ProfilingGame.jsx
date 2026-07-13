@@ -1,171 +1,298 @@
 'use client';
 
-import { useState } from 'react';
-import { GEAR_STEPS, matchRunnerType } from '@/lib/runnerTypes';
+import { useState, useMemo, useRef } from 'react';
+import { QUIZ_STEPS, RUNNER_ARCHETYPES, RARITY_CARDS, RARITY_STATS, matchRunnerType } from '@/lib/runnerTypes';
 import ShareCardModal from './ShareCardModal';
 
-const TOTAL_STEPS = GEAR_STEPS.length + 1; // + lead-capture step
+const TOTAL_SCORED_STEPS = QUIZ_STEPS.length;
 
 export default function ProfilingGame() {
   const [stepIndex, setStepIndex] = useState(0);
-  const [picks, setPicks] = useState([]);
+  const [choices, setChoices] = useState([]);
   const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
   const [result, setResult] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const sectionRef = useRef(null);
 
-  const isLeadStep = stepIndex === GEAR_STEPS.length;
-  const step = GEAR_STEPS[stepIndex];
+  const isNameStep = stepIndex === TOTAL_SCORED_STEPS;
+  const step = QUIZ_STEPS[stepIndex];
+
+  // Pick random description & quote indices once per result
+  const randomIdx = useMemo(() => ({
+    desc: Math.floor(Math.random() * 3),
+    quote: Math.floor(Math.random() * 3),
+  }), [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function choose(option) {
-    const nextPicks = [...picks, option.axes];
-    setPicks(nextPicks);
-    setStepIndex((i) => i + 1);
+    const next = [...choices, option.id];
+    setChoices(next);
+    setStepIndex(i => i + 1);
   }
 
   function reveal() {
-    setResult(matchRunnerType(picks));
+    const matched = matchRunnerType(choices);
+    setResult(matched);
   }
 
   function restart() {
     setStepIndex(0);
-    setPicks([]);
+    setChoices([]);
     setResult(null);
     setNickname('');
-    setEmail('');
+    // Scroll back up to the profiling section
+    setTimeout(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   }
 
-  /* Build the data object passed to ShareCardModal */
+  const progressPercent = Math.min(((stepIndex) / TOTAL_SCORED_STEPS) * 100, 100);
+
+  const cardStats = result ? RARITY_STATS[result.rarity] : null;
+
   const shareData = result
     ? {
+      mode: 'runner-type',
       section: 'My Runner Type:',
-      title: result.name,
-      accentWord: null,
+      title: result.title,
+      name: nickname || 'Runner',
+      rarity: result.rarity,
+      emoji: result.emoji,
       tagline: result.tagline,
-      description: result.description,
-      praise: result.praise,
-      stats: [],
+      description: result.descriptions[randomIdx.desc],
+      quote: result.quotes[randomIdx.quote],
+      cardImage: RARITY_CARDS[result.rarity],
+      signatureMoves: result.signatureMoves,
+      starterPack: result.starterPack,
+      stats: cardStats,
     }
     : null;
 
   return (
     <>
-      <section id="profiling" className="relative border-b border-grey-600/40 py-24 px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <span className="font-mono text-xs uppercase tracking-widest text-lime">Mini game</span>
-          <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">
-            WHAT&rsquo;S YOUR
-            <br />
-            RUNNER TYPE?
-          </h2>
-          <p className="mt-4 text-grey-400">
-            Pick your gear, your time, your goal. We&rsquo;ll reveal your runner type — then dare your
-            friends to see if theirs beats it.
-          </p>
-        </div>
-
-        <div className="mt-10 max-w-md mx-auto rounded-2xl border border-grey-600/60 bg-ink-soft p-6 sm:p-8">
-          {!result && !isLeadStep && step && (
-            <div key={step.id} className="animate-floatUp">
-              <div className="flex items-center gap-2 mb-6">
-                {GEAR_STEPS.map((s, i) => (
-                  <div
-                    key={s.id}
-                    className={`h-1 flex-1 rounded-full transition-colors ${i <= stepIndex ? 'bg-lime' : 'bg-grey-600'
-                      }`}
-                  />
-                ))}
-              </div>
-              <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400">
-                Step {stepIndex + 1} of {GEAR_STEPS.length}
+      <section id="profiling" ref={sectionRef} className="relative py-24 px-6">
+        <div className="max-w-3xl mx-auto glass-panel p-8 sm:p-12">
+          {!result && (
+            <div className="max-w-2xl mx-auto text-center mb-10">
+              <span className="font-mono text-xs uppercase tracking-widest text-lime">Mini game</span>
+              <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">
+                OWN YOUR
+                <br />
+                <span className="text-lime">RUNNER</span> CARD.
+              </h2>
+              <p className="mt-4 text-grey-400">
+                GARUNNA is a running app that knows exactly what kind of runner you are.
+                Find out now then challenge your friends to try.
               </p>
-              <h3 className="mt-2 font-display text-2xl">{step.title}</h3>
+            </div>
+          )}
+
+          <div className="max-w-lg mx-auto">
+          {/* ── Quiz steps ── */}
+          {!result && !isNameStep && step && (
+            <div key={step.id} className="animate-floatUp">
+              <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400 mb-2">
+                Step {stepIndex + 1} of {TOTAL_SCORED_STEPS}
+              </p>
+              <h3 className="font-display text-2xl text-lime">{step.title} :</h3>
               <p className="mt-1 text-sm text-grey-400">{step.subtitle}</p>
 
-              <div className="mt-6 grid grid-cols-1 gap-2.5">
-                {step.options.map((opt) => (
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                {step.options.map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => choose(opt)}
-                    className="text-left rounded-xl border border-grey-600 bg-ink px-4 py-3.5 text-sm hover:border-lime hover:text-lime transition-colors"
+                    className="flex items-center justify-between text-left rounded-xl border border-grey-600 bg-ink/50 px-4 py-3.5 text-sm hover:border-lime hover:text-lime transition-colors group"
                   >
-                    {opt.label}
+                    <span>{opt.label}</span>
+                    <span className="text-grey-500 group-hover:text-lime transition-colors">→</span>
                   </button>
                 ))}
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-6 flex items-center gap-3">
+                <div className="flex-1 h-2 rounded-full bg-grey-600 overflow-hidden">
+                  <div
+                    className="h-full bg-lime rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/newer-design/card-together.png"
+                  alt="Cards"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
             </div>
           )}
 
-          {!result && isLeadStep && (
-            <div className="animate-floatUp text-left">
-              <h3 className="font-display text-2xl text-center">Almost there</h3>
-              <p className="mt-1 text-sm text-grey-400 text-center">
-                One tap away from your runner type.
+          {/* ── Name step ── */}
+          {!result && isNameStep && (
+            <div className="animate-floatUp text-center">
+              <h3 className="font-display text-2xl">Almost there</h3>
+              <p className="mt-1 text-sm text-grey-400">
+                One tap away from your runner card.
               </p>
               <div className="mt-6 space-y-3">
                 <input
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={e => setNickname(e.target.value)}
                   placeholder="Your nickname"
-                  className="w-full rounded-xl border border-grey-600 bg-ink px-4 py-3.5 text-sm placeholder:text-grey-500 focus:outline-none focus:border-lime"
+                  className="w-full rounded-xl border border-grey-600 bg-ink/50 px-4 py-3.5 text-sm placeholder:text-grey-500 focus:outline-none focus:border-lime"
                 />
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="Email — we'll notify you at launch"
-                  className="w-full rounded-xl border border-grey-600 bg-ink px-4 py-3.5 text-sm placeholder:text-grey-500 focus:outline-none focus:border-lime"
-                />
+                {!nickname.trim() && (
+                  <p className="text-xs text-red-400 -mt-1">Please enter your name to continue</p>
+                )}
                 <button
                   onClick={reveal}
-                  className="w-full rounded-xl bg-lime text-ink font-semibold px-4 py-3.5 hover:bg-lime-soft transition-colors"
+                  disabled={!nickname.trim()}
+                  className="w-full rounded-xl bg-lime text-ink font-semibold px-4 py-3.5 hover:bg-lime-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Reveal my runner type →
+                  Reveal my runner card →
                 </button>
-                <p className="text-center font-mono text-[10px] uppercase tracking-widest text-grey-500">
-                  No spam. We&rsquo;ll only reach out when GARUNNA drops.
-                </p>
+              </div>
+
+              {/* Progress bar full */}
+              <div className="mt-6 flex items-center gap-3">
+                <div className="flex-1 h-2 rounded-full bg-grey-600 overflow-hidden">
+                  <div className="h-full bg-lime rounded-full w-full" />
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/newer-design/card-together.png"
+                  alt="Cards"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
             </div>
           )}
 
+          {/* ── Result ── */}
           {result && (
-            <div className="animate-floatUp text-center">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-lime">You are</span>
-              <h3 className="mt-2 font-display text-3xl">{result.name}</h3>
-              <p className="mt-1 text-sm text-grey-400 italic">{result.tagline}</p>
-              <p className="mt-5 text-sm text-paper/90 leading-relaxed">{result.description}</p>
-              <p className="mt-4 text-sm text-lime-soft leading-relaxed border-t border-grey-600 pt-4">
-                {result.praise}
+            <div className="animate-floatUp">
+              {/* Header */}
+              <p className="text-center font-mono text-xs uppercase tracking-widest text-lime font-bold mb-4">
+                CONGRATULATIONS !!!
               </p>
 
-              {/* Primary actions */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {/* Name & type */}
+              <div className="text-center mb-6">
+                <h3 className="font-display text-3xl">{nickname || 'Runner'}</h3>
+                <p className="text-grey-400 text-sm mt-1">
+                  {result.emoji} {result.title}
+                </p>
+              </div>
+
+              {/* Description */}
+              <p className="text-sm text-paper/90 leading-relaxed text-center mb-6">
+                {result.descriptions[randomIdx.desc]}
+              </p>
+
+              {/* Card image with stats overlay */}
+              <div className="flex justify-center mb-6">
+                <div className="relative w-56 sm:w-64">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={RARITY_CARDS[result.rarity]}
+                    alt={`${result.rarity} card`}
+                    className="w-full h-auto drop-shadow-2xl"
+                  />
+                  {/* Stats overlay at bottom of card */}
+                  {cardStats && (
+                    <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 w-[85%]">
+                      {/* Name overlay */}
+                      <div className="text-center mb-1">
+                        <p className="font-display text-sm sm:text-base text-white drop-shadow-lg leading-tight">
+                          {nickname || 'Runner'}
+                        </p>
+                        <p className="font-mono text-[8px] sm:text-[9px] text-white/60 uppercase tracking-wider">
+                          {result.title}
+                        </p>
+                      </div>
+                      {/* Divider */}
+                      <div className="w-full h-px bg-white/20 my-2" />
+                      {/* Pace | Duration | Distance */}
+                      <div className="flex items-center justify-between text-center px-1">
+                        <div className="flex-1">
+                          <p className="font-mono text-[7px] sm:text-[8px] uppercase tracking-wider text-white/50">Pace</p>
+                          <p className="font-display text-xs sm:text-sm text-white drop-shadow-lg">{cardStats.pace}</p>
+                        </div>
+                        <div className="w-px h-6 bg-white/20" />
+                        <div className="flex-1">
+                          <p className="font-mono text-[7px] sm:text-[8px] uppercase tracking-wider text-white/50">Duration</p>
+                          <p className="font-display text-xs sm:text-sm text-white drop-shadow-lg">{cardStats.duration}</p>
+                        </div>
+                        <div className="w-px h-6 bg-white/20" />
+                        <div className="flex-1">
+                          <p className="font-mono text-[7px] sm:text-[8px] uppercase tracking-wider text-white/50">Distance</p>
+                          <p className="font-display text-xs sm:text-sm text-white drop-shadow-lg">{cardStats.distance}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quote */}
+              <div className="glass-panel-inner p-4 text-center mb-6">
+                <p className="text-lime italic text-sm">
+                  {result.quotes[randomIdx.quote]}
+                </p>
+              </div>
+
+              {/* Signature Moves & Starter Pack */}
+              <div className="grid grid-cols-2 gap-4 mb-12">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-grey-400 mb-2">
+                    Signature Moves
+                  </p>
+                  <p className="text-xs text-paper/80 leading-relaxed">
+                    {result.signatureMoves.split(';').map(s => s.trim()).join('; ')}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-grey-400 mb-2">
+                    Starter Pack / Gear
+                  </p>
+                  <p className="text-xs text-paper/80 leading-relaxed">
+                    {result.starterPack.split(';').map(s => s.trim()).join('; ')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Spotify Embed */}
+              <div className="mb-6 rounded-xl overflow-hidden">
+                <iframe
+                  title="Spotify Playlist"
+                  src={`https://open.spotify.com/embed/playlist/${result.spotifyId}?utm_source=generator&theme=0`}
+                  width="100%"
+                  height="152"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style={{ borderRadius: '12px' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={restart}
                   className="flex-1 rounded-xl border border-grey-600 px-4 py-3 text-sm hover:border-lime hover:text-lime transition-colors"
                 >
                   ↺ Try again
                 </button>
-                <a
-                  href="#projection"
-                  className="flex-1 rounded-xl bg-lime text-ink font-semibold px-4 py-3 text-sm hover:bg-lime-soft transition-colors"
-                >
-                  Project my pace →
-                </a>
-              </div>
-
-              {/* Share action */}
-              <div className="mt-3">
                 <button
                   onClick={() => setShareOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-lime/40 text-lime px-4 py-3 text-sm font-semibold hover:bg-lime/5 transition-colors"
+                  className="flex-1 rounded-xl bg-lime text-ink font-semibold px-4 py-3 text-sm hover:bg-lime-soft transition-colors"
                 >
-                  <span>↗</span> Share my runner type
+                  ↗ Share to Instagram
                 </button>
               </div>
             </div>
           )}
+        </div>
         </div>
       </section>
 
