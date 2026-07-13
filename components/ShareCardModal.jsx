@@ -235,7 +235,7 @@ async function renderRunnerCard(data) {
     ctx.font = nameFontBuilder(nameSize);
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 8;
-    ctx.fillText(displayName, centerX, statsY - 4);
+    ctx.fillText(displayName, centerX, statsY + 10);
 
     // Runner type subtitle
     ctx.font = "18px 'JetBrains Mono', monospace";
@@ -244,14 +244,14 @@ async function renderRunnerCard(data) {
       ctx, data.title, nameMaxW, (s) => `${s}px 'JetBrains Mono', monospace`, 18, 12
     );
     ctx.font = `${titleSize}px 'JetBrains Mono', monospace`;
-    ctx.fillText(displayTitle, centerX, statsY + 44);
+    ctx.fillText(displayTitle, centerX, statsY + 70);
     ctx.shadowBlur = 0;
 
     // Divider line
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(statsX + 10, statsY + 78);
-    ctx.lineTo(statsX + statsW - 10, statsY + 78);
+    ctx.moveTo(statsX + 0 + 10, statsY + 120);
+    ctx.lineTo(statsX + 0 + statsW - 10, statsY + 120);
     ctx.stroke();
 
     // Stats row — Pace | Duration | Distance
@@ -273,7 +273,7 @@ async function renderRunnerCard(data) {
       ctx.font = labelFontBuilder(labelFit.size);
       ctx.textBaseline = 'top';
       ctx.textAlign = 'center';
-      ctx.fillText(labelFit.text, cx, statsY + 92);
+      ctx.fillText(labelFit.text, cx, statsY + 150);
 
       // Value — sized to always fit inside its column
       const valueFontBuilder = (s) => `${s}px 'Anton', sans-serif`;
@@ -281,15 +281,15 @@ async function renderRunnerCard(data) {
       ctx.font = valueFontBuilder(valueFit.size);
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-      ctx.fillText(valueFit.text, cx, statsY + 116);
+      ctx.fillText(valueFit.text, cx, statsY + 180);
       ctx.shadowBlur = 0;
 
       // Vertical divider between columns
       if (i < statItems.length - 1) {
         ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(statsX + colW * (i + 1), statsY + 90);
-        ctx.lineTo(statsX + colW * (i + 1), statsY + 186);
+        ctx.moveTo(statsX + colW * (i + 1), statsY + 150);
+        ctx.lineTo(statsX + colW * (i + 1), statsY + 210);
         ctx.stroke();
       }
     });
@@ -297,7 +297,7 @@ async function renderRunnerCard(data) {
 
   // Name + type below card
   const belowMaxW = w - padH * 2;
-  let curY = cardY + cardH + 34;
+  let curY = cardY + cardH + 40;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   const bigNameFit = fitAndTruncate(
