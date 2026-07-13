@@ -81,6 +81,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+
 function drawDotGrid(ctx, w, h, spacing = 44) {
   ctx.fillStyle = 'rgba(245,245,240,0.055)';
   for (let x = spacing; x < w; x += spacing)
@@ -99,6 +100,36 @@ function wrapText(ctx, text, maxW) {
   }
   if (cur) lines.push(cur);
   return lines;
+}
+
+/**
+ * Picks the largest font size (down to minSize) at which `text` fits
+ * within `maxWidth`. Prevents any label/value from overflowing its box.
+ * fontBuilder(size) must return a valid canvas font string for that size.
+ */
+function fitFontSize(ctx, text, maxWidth, fontBuilder, startSize, minSize = 14, step = 1) {
+  let size = startSize;
+  while (size > minSize) {
+    ctx.font = fontBuilder(size);
+    if (ctx.measureText(text).width <= maxWidth) return size;
+    size -= step;
+  }
+  ctx.font = fontBuilder(minSize);
+  return minSize;
+}
+
+/** Truncates text with an ellipsis if it still doesn't fit at minSize. */
+function fitAndTruncate(ctx, text, maxWidth, fontBuilder, startSize, minSize = 14) {
+  const size = fitFontSize(ctx, text, maxWidth, fontBuilder, startSize, minSize);
+  ctx.font = fontBuilder(size);
+  let display = text;
+  if (ctx.measureText(display).width > maxWidth) {
+    while (display.length > 1 && ctx.measureText(display + '…').width > maxWidth) {
+      display = display.slice(0, -1);
+    }
+    display += '…';
+  }
+  return { size, text: display };
 }
 
 /* ── Load image as promise ── */
@@ -131,66 +162,101 @@ async function renderRunnerCard(data) {
   const centerX = w / 2;
 
   // Badge
-  const badgeW = 280, badgeH = 56, badgeY = 120;
+  const badgeW = 280, badgeH = 56, badgeY = 110;
   ctx.fillStyle = 'rgba(42,42,42,0.8)';
   roundRect(ctx, centerX - badgeW / 2, badgeY, badgeW, badgeH, badgeH / 2); ctx.fill();
   ctx.fillStyle = C.lime;
   ctx.beginPath(); ctx.arc(centerX - badgeW / 2 + 36, badgeY + badgeH / 2, 9, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = C.paper;
-  ctx.font = "bold 28px 'Anton', sans-serif";
+  ctx.font = "26px 'Anton', sans-serif";
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.fillText('GARUNNA.COM', centerX - badgeW / 2 + 60, badgeY + badgeH / 2);
 
-  // Card image
-  const cardW = 440, cardH = 640;
-  const cardX = centerX - cardW / 2;
-  const cardY = 250;
+  // Card image — bigger, and sized to the artwork's real aspect ratio so it
+  // is never stretched/squashed (that stretching is what was "slicing" the
+  // card art before). Falls back to the standard trading-card ratio if the
+  // image can't be loaded/measured.
+  const cardW = 640;
+  let cardImg = null;
   try {
-    const cardImg = await loadImage(data.cardImage);
-    ctx.drawImage(cardImg, cardX, cardY, cardW, cardH);
+    cardImg = await loadImage(data.cardImage);
   } catch { /* skip if card not loaded */ }
+  const cardAspect = cardImg && cardImg.naturalWidth
+    ? cardImg.naturalHeight / cardImg.naturalWidth
+    : 900 / 640;
+  const cardH = Math.round(cardW * cardAspect);
+  const cardX = centerX - cardW / 2;
+  const cardY = 200;
+  if (cardImg) ctx.drawImage(cardImg, cardX, cardY, cardW, cardH);
 
   // Draw stats on card (Pace | Duration | Distance)
   if (data.stats) {
-    // Position the overlay in the lower portion of the card, well within bounds
-    const overlayH = 180; // total height of the name + stats overlay
-    const statsY = cardY + cardH - overlayH - 20; // 20px padding from card bottom edge
-    const statsW = cardW - 40; // 20px padding on each side
-    const statsX = cardX + 20;
+    // Position the overlay in the lower portion of the card, matching the
+    // in-app preview (which anchors it well clear of the card's bottom
+    // edge, not hugging it) — roughly 17% of the card's height up from
+    // the bottom.
+    const overlayH = 210; // total height of the name + stats overlay
+    const bottomMargin = Math.round(cardH * 0.17); // gap from block to card's bottom edge
+    const statsY = cardY + cardH - overlayH - bottomMargin;
+    const statsW = cardW - 48; // padding on each side
+    const statsX = cardX + 24;
 
-    // Semi-transparent backdrop for readability
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    roundRect(ctx, statsX - 10, statsY - 16, statsW + 20, overlayH + 10, 16);
-    ctx.fill();
-
-    // Name on card — truncate if too long
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = "bold 40px 'Anton', sans-serif";
-    ctx.textBaseline = 'top';
-    ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 10;
-    let displayName = data.name;
-    while (ctx.measureText(displayName).width > statsW - 20 && displayName.length > 3) {
-      displayName = displayName.slice(0, -1);
+    // Darken-for-readability effect, masked to the card artwork's own
+    // shape (its alpha channel) instead of a plain rectangle — this is
+    // what makes it follow the card's curved/shield-shaped bottom rather
+    // than showing up as a box that clashes with that curve. Rendered as
+    // a soft gradient (transparent → dark) rather than a flat fill so
+    // there's no hard edge at all, just a natural vignette.
+    if (cardImg) {
+      const backdropTop = statsY - 20;
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = cardW;
+      maskCanvas.height = cardH;
+      const mctx = maskCanvas.getContext('2d');
+      mctx.drawImage(cardImg, 0, 0, cardW, cardH);
+      mctx.globalCompositeOperation = 'source-atop';
+      const grad = mctx.createLinearGradient(0, backdropTop - cardY, 0, cardH);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.75)');
+      mctx.fillStyle = grad;
+      mctx.fillRect(0, 0, cardW, cardH);
+      ctx.drawImage(maskCanvas, cardX, cardY);
     }
-    if (displayName !== data.name) displayName += '…';
-    ctx.fillText(displayName, centerX, statsY - 6);
+
+    // Name on card — shrink to fit, then truncate as a last resort
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const nameMaxW = statsW - 24;
+    const nameFontBuilder = (size) => `${size}px 'Anton', sans-serif`;
+    const { size: nameSize, text: displayName } = fitAndTruncate(
+      ctx, data.name, nameMaxW, nameFontBuilder, 42, 24
+    );
+    ctx.font = nameFontBuilder(nameSize);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 8;
+    ctx.fillText(displayName, centerX, statsY - 4);
 
     // Runner type subtitle
     ctx.font = "18px 'JetBrains Mono', monospace";
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText(data.title, centerX, statsY + 40);
+    const { size: titleSize, text: displayTitle } = fitAndTruncate(
+      ctx, data.title, nameMaxW, (s) => `${s}px 'JetBrains Mono', monospace`, 18, 12
+    );
+    ctx.font = `${titleSize}px 'JetBrains Mono', monospace`;
+    ctx.fillText(displayTitle, centerX, statsY + 44);
     ctx.shadowBlur = 0;
 
     // Divider line
     ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(statsX + 10, statsY + 68);
-    ctx.lineTo(statsX + statsW - 10, statsY + 68);
+    ctx.moveTo(statsX + 10, statsY + 78);
+    ctx.lineTo(statsX + statsW - 10, statsY + 78);
     ctx.stroke();
 
     // Stats row — Pace | Duration | Distance
     const colW = statsW / 3;
+    const colInnerW = colW - 20; // keep every value clear of its column edges
     const statItems = [
       { label: 'PACE', value: data.stats.pace },
       { label: 'DURATION', value: data.stats.duration },
@@ -202,104 +268,144 @@ async function renderRunnerCard(data) {
 
       // Label
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.font = "bold 16px 'JetBrains Mono', monospace";
+      const labelFontBuilder = (s) => `${s}px 'JetBrains Mono', monospace`;
+      const labelFit = fitAndTruncate(ctx, item.label, colInnerW, labelFontBuilder, 15, 10);
+      ctx.font = labelFontBuilder(labelFit.size);
       ctx.textBaseline = 'top';
       ctx.textAlign = 'center';
-      ctx.fillText(item.label, cx, statsY + 78);
+      ctx.fillText(labelFit.text, cx, statsY + 92);
 
-      // Value
+      // Value — sized to always fit inside its column
+      const valueFontBuilder = (s) => `${s}px 'Anton', sans-serif`;
+      const valueFit = fitAndTruncate(ctx, item.value, colInnerW, valueFontBuilder, 34, 18);
+      ctx.font = valueFontBuilder(valueFit.size);
       ctx.fillStyle = '#ffffff';
-      ctx.font = "bold 38px 'Anton', sans-serif";
       ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-      ctx.fillText(item.value, cx, statsY + 100);
+      ctx.fillText(valueFit.text, cx, statsY + 116);
       ctx.shadowBlur = 0;
 
       // Vertical divider between columns
       if (i < statItems.length - 1) {
         ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(statsX + colW * (i + 1), statsY + 76);
-        ctx.lineTo(statsX + colW * (i + 1), statsY + 146);
+        ctx.moveTo(statsX + colW * (i + 1), statsY + 90);
+        ctx.lineTo(statsX + colW * (i + 1), statsY + 186);
         ctx.stroke();
       }
     });
   }
 
   // Name + type below card
-  let curY = cardY + cardH + 30;
+  const belowMaxW = w - padH * 2;
+  let curY = cardY + cardH + 34;
   ctx.textAlign = 'center';
-  ctx.fillStyle = C.paper;
-  ctx.font = "bold 64px 'Anton', sans-serif";
   ctx.textBaseline = 'top';
-  ctx.fillText(data.name, centerX, curY);
-  curY += 80;
+  const bigNameFit = fitAndTruncate(
+    ctx, data.name, belowMaxW, (s) => `${s}px 'Anton', sans-serif`, 60, 34
+  );
+  ctx.font = `${bigNameFit.size}px 'Anton', sans-serif`;
+  ctx.fillStyle = C.paper;
+  ctx.fillText(bigNameFit.text, centerX, curY);
+  curY += Math.round(bigNameFit.size * 1.15) + 16;
 
   ctx.fillStyle = C.grey400;
-  ctx.font = "32px 'Space Grotesk', sans-serif";
+  ctx.font = "30px 'Space Grotesk', sans-serif";
   ctx.fillText(`${data.emoji} ${data.title}`, centerX, curY);
-  curY += 60;
+  curY += 58;
 
   // Quote
-  curY += 20;
+  curY += 18;
   ctx.fillStyle = C.lime;
-  ctx.font = "italic 34px 'Space Grotesk', sans-serif";
+  ctx.font = "italic 32px 'Space Grotesk', sans-serif";
   const quoteLines = wrapText(ctx, data.quote, w - padH * 2);
   for (const line of quoteLines) {
     ctx.fillText(line, centerX, curY);
-    curY += 52;
+    curY += 48;
   }
 
   // Signature Moves & Starter Pack / Gear section
-  curY += 40;
+  curY += 44;
 
-  const sectionPadH = 100;
-  const colWidth = (w - sectionPadH * 2) / 2 - 16;
-  const sectionStartX = sectionPadH;
+  // Use the same padH as the badge/name/quote/footer above, instead of a
+  // separate margin — that mismatch was what made this block read as
+  // off-center relative to everything else on the card.
+  const gapBetweenCols = 32;
+  const colWidth = (w - padH * 2 - gapBetweenCols) / 2;
+  const sectionStartX = padH;
+  const sectionTopY = curY;
+  let moveEndY = sectionTopY;
+  let gearEndY = sectionTopY;
 
   // Signature Moves column
   if (data.signatureMoves) {
     ctx.textAlign = 'left';
     ctx.fillStyle = C.grey400;
-    ctx.font = "bold 20px 'JetBrains Mono', monospace";
+    ctx.font = "20px 'JetBrains Mono', monospace";
     ctx.textBaseline = 'top';
-    ctx.fillText('SIGNATURE MOVES', sectionStartX, curY);
+    ctx.fillText('SIGNATURE MOVES', sectionStartX, sectionTopY);
 
-    const moves = data.signatureMoves.split(';').map(s => s.trim());
+    const moves = data.signatureMoves.split(';').map(s => s.trim()).filter(Boolean);
     ctx.fillStyle = 'rgba(245,245,240,0.75)';
-    ctx.font = "26px 'Space Grotesk', sans-serif";
-    let moveY = curY + 36;
+    ctx.font = "24px 'Space Grotesk', sans-serif";
+    let moveY = sectionTopY + 40;
     moves.forEach(move => {
-      ctx.fillText(`• ${move}`, sectionStartX, moveY);
-      moveY += 38;
+      const lines = wrapText(ctx, `• ${move}`, colWidth);
+      lines.forEach((line) => {
+        ctx.fillText(line, sectionStartX, moveY);
+        moveY += 34;
+      });
+      moveY += 6;
     });
+    moveEndY = moveY;
   }
 
   // Starter Pack / Gear column
   if (data.starterPack) {
-    const rightColX = sectionStartX + colWidth + 32;
+    const rightColX = sectionStartX + colWidth + gapBetweenCols;
     ctx.textAlign = 'left';
     ctx.fillStyle = C.grey400;
-    ctx.font = "bold 20px 'JetBrains Mono', monospace";
+    ctx.font = "20px 'JetBrains Mono', monospace";
     ctx.textBaseline = 'top';
-    ctx.fillText('STARTER PACK / GEAR', rightColX, curY);
+    ctx.fillText('STARTER PACK / GEAR', rightColX, sectionTopY);
 
-    const gears = data.starterPack.split(';').map(s => s.trim());
+    const gears = data.starterPack.split(';').map(s => s.trim()).filter(Boolean);
     ctx.fillStyle = 'rgba(245,245,240,0.75)';
-    ctx.font = "26px 'Space Grotesk', sans-serif";
-    let gearY = curY + 36;
+    ctx.font = "24px 'Space Grotesk', sans-serif";
+    let gearY = sectionTopY + 40;
     gears.forEach(gear => {
-      ctx.fillText(`• ${gear}`, rightColX, gearY);
-      gearY += 38;
+      const lines = wrapText(ctx, `• ${gear}`, colWidth);
+      lines.forEach((line) => {
+        ctx.fillText(line, rightColX, gearY);
+        gearY += 34;
+      });
+      gearY += 6;
     });
+    gearEndY = gearY;
   }
 
-  // Footer
-  ctx.textAlign = 'center';
-  ctx.fillStyle = C.grey500;
-  ctx.font = "24px 'JetBrains Mono', monospace";
-  ctx.textBaseline = 'bottom';
-  ctx.fillText('garunna.app · Discover your runner card', centerX, h - 80);
+  // Footer — styled as the same kind of pill badge as the header, placed
+  // right after the taller of the two columns with a modest, header-like
+  // gap (not a lone line stuck far down the canvas, and not glued right
+  // under the lists either). Any remaining blank space below it, down to
+  // the bottom of the 1080×1920 story canvas, is expected and left as-is.
+  const footerText = 'garunna.app · Discover your runner card';
+  const footerFont = "20px 'JetBrains Mono', monospace";
+  ctx.font = footerFont;
+  const footerTextW = ctx.measureText(footerText).width;
+  const footerBadgeW = footerTextW + 72;
+  const footerBadgeH = 52;
+  const footerY = Math.max(moveEndY, gearEndY) + 70;
+
+  ctx.fillStyle = 'rgba(42,42,42,0.8)';
+  roundRect(ctx, centerX - footerBadgeW / 2, footerY, footerBadgeW, footerBadgeH, footerBadgeH / 2); ctx.fill();
+  ctx.fillStyle = C.lime;
+  ctx.beginPath();
+  ctx.arc(centerX - footerBadgeW / 2 + 26, footerY + footerBadgeH / 2, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = C.paper;
+  ctx.font = footerFont;
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(footerText, centerX - footerBadgeW / 2 + 44, footerY + footerBadgeH / 2);
 
   return canvas;
 }
