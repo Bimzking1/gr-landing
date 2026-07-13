@@ -70,22 +70,23 @@ export default function ProfilingGame() {
   return (
     <>
       <section id="profiling" ref={sectionRef} className="relative py-24 px-6">
-        {!result && (
-          <div className="max-w-2xl mx-auto text-center mb-10">
-            <span className="font-mono text-xs uppercase tracking-widest text-lime">Mini game</span>
-            <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">
-              OWN YOUR
-              <br />
-              <span className="text-lime">RUNNER</span> CARD.
-            </h2>
-            <p className="mt-4 text-grey-400">
-              GARUNNA is a running app that knows exactly what kind of runner you are.
-              Find out now then challenge your friends to try.
-            </p>
-          </div>
-        )}
+        <div className="max-w-3xl mx-auto glass-panel p-8 sm:p-12">
+          {!result && (
+            <div className="max-w-2xl mx-auto text-center mb-10">
+              <span className="font-mono text-xs uppercase tracking-widest text-lime">Mini game</span>
+              <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">
+                OWN YOUR
+                <br />
+                <span className="text-lime">RUNNER</span> CARD.
+              </h2>
+              <p className="mt-4 text-grey-400">
+                GARUNNA is a running app that knows exactly what kind of runner you are.
+                Find out now then challenge your friends to try.
+              </p>
+            </div>
+          )}
 
-        <div className="max-w-lg mx-auto glass-panel p-6 sm:p-8">
+          <div className="max-w-lg mx-auto">
           {/* ── Quiz steps ── */}
           {!result && !isNameStep && step && (
             <div key={step.id} className="animate-floatUp">
@@ -291,6 +292,7 @@ export default function ProfilingGame() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </section>
 

@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-ink">
+    <main className="min-h-screen bg-ink page-bg">
       <Hero />
       <ProfilingGame />
       <ProjectionGame />
