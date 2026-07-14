@@ -1,4 +1,4 @@
-// GARUNNA projection engine — a deliberately simple, transparent model.
+// GARUNA projection engine — a deliberately simple, transparent model.
 // Not a training-science tool: it's a landing-page hook that turns a
 // few taps into a shareable "this could be you" number.
 

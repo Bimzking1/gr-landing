@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef } from 'react';
 import { QUIZ_STEPS, RUNNER_ARCHETYPES, RARITY_CARDS, RARITY_STATS, matchRunnerType } from '@/lib/runnerTypes';
-import ShareCardModal from './ShareCardModal';
+import ShareCardModal from './ShareCardModalRunningProfile';
 
 const TOTAL_SCORED_STEPS = QUIZ_STEPS.length;
 
@@ -80,7 +80,7 @@ export default function ProfilingGame() {
                 <span className="text-lime">RUNNER</span> CARD.
               </h2>
               <p className="mt-4 text-grey-400">
-                GARUNNA is a running app that knows exactly what kind of runner you are.
+                GARUNA is a running app that knows exactly what kind of runner you are.
                 Find out now then challenge your friends to try.
               </p>
             </div>

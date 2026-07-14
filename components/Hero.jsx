@@ -8,7 +8,7 @@ export default function Hero() {
       <nav className="relative z-10 flex items-center justify-between px-6 py-6 max-w-6xl mx-auto">
         <div className="flex items-center gap-2 font-display text-lg tracking-tight">
           <span className="inline-block h-2 w-2 rounded-full bg-lime animate-pulseDot" />
-          GARUNNA
+          GARUNA
         </div>
         <div className="hidden sm:flex items-center gap-6 font-mono text-xs text-grey-400 uppercase tracking-widest">
           <a href="#" className="hover:text-paper transition-colors">Instagram</a>
@@ -29,7 +29,7 @@ export default function Hero() {
         </h1>
 
         <p className="mt-6 max-w-xl mx-auto text-grey-400 text-base sm:text-lg animate-floatUp [animation-delay:200ms]">
-          GARUNNA is a running app that knows exactly what kind of runner you are.{' '}
+          GARUNA is a running app that knows exactly what kind of runner you are.{' '}
           <ShinyText as="span" className="font-medium">Find out now</ShinyText> — then challenge your friends to beat your score.
         </p>
 

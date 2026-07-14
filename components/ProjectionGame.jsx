@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { EXPERIENCE_LEVELS, SHOE_MODIFIERS, GOAL_MODIFIERS, computeProjection } from '@/lib/projection';
-import ShareCardModal from './ShareCardModal';
+import ShareCardModal from './ShareCardModalRunningProfile';
 
 export default function ProjectionGame() {
   const [experienceId, setExperienceId] = useState(EXPERIENCE_LEVELS[0].id);

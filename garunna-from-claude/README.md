@@ -1,6 +1,6 @@
-# GARUNNA — landing page
+# GARUNA — landing page
 
-Next.js 14 (App Router) + Tailwind CSS landing page for GARUNNA: a
+Next.js 14 (App Router) + Tailwind CSS landing page for GARUNA: a
 runner-profiling mini-game, a pace/mileage projection game, and a
 client-side `.fit` file reader with charts and a route map.
 

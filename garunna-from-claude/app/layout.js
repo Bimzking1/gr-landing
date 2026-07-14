@@ -1,11 +1,11 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'GARUNNA — Run today. Own your runner type.',
+  title: 'GARUNA — Run today. Own your runner type.',
   description:
-    'GARUNNA is a running app that knows exactly what kind of runner you are. Find out now, project your pace, and challenge your friends to beat your score.',
+    'GARUNA is a running app that knows exactly what kind of runner you are. Find out now, project your pace, and challenge your friends to beat your score.',
   openGraph: {
-    title: 'GARUNNA — Run today. Own your runner type.',
+    title: 'GARUNA — Run today. Own your runner type.',
     description:
       'A running app that knows exactly what kind of runner you are.',
     type: 'website',

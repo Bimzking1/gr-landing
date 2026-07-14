@@ -1,4 +1,4 @@
-// GARUNNA runner-profiling engine.
+// GARUNA runner-profiling engine.
 // Four quick picks each nudge an 8-axis vector; whichever archetype's
 // own vector is closest (dot product) wins. Keeps the game feeling like
 // a real quiz instead of a lookup table, without needing real user data.
