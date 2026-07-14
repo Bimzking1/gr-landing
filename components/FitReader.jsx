@@ -7,7 +7,7 @@ import 'chart.js/auto';
 import { parseFit, buildActivityModel, formatDuration, formatPace, formatDateTime, num } from '@/lib/fitDecoder';
 import { parseTcx } from '@/lib/tcxDecoder';
 import { calcAll, deriveActivityInfo } from '@/lib/vitCalculator';
-import { saveActivityToFeed, getFeed } from '@/lib/localFeed';
+import { saveActivityToFeed, getFeed, getFeedServer } from '@/lib/localFeed';
 import { RARITY_CARDS } from '@/lib/runnerTypes';
 import TutorialCarousel from './TutorialCarousel';
 import ShareCardModal from './ShareCardModal';
@@ -41,8 +41,8 @@ export default function FitReader() {
       window.addEventListener('storage', onStoreChange);
       return () => window.removeEventListener('storage', onStoreChange);
     },
-    () => getFeed(),
-    () => []
+    getFeed,
+    getFeedServer
   );
   const [vitResult, setVitResult] = useState(null);
   const [userName, setUserName] = useState('');
