@@ -108,7 +108,7 @@ export default function ProfilingGame() {
                 Reveal my runner type →
               </button>
               <p className="text-center font-mono text-[10px] uppercase tracking-widest text-grey-500">
-                No spam. We&rsquo;ll only reach out when GARUNNA drops.
+                No spam. We&rsquo;ll only reach out when GARUNA drops.
               </p>
             </div>
           </div>

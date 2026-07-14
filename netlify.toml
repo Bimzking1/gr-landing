@@ -1,4 +1,4 @@
-# Netlify build configuration for GARUNNA landing page.
+# Netlify build configuration for GARUNA landing page.
 # Next.js is configured with output: "export" (static HTML/CSS/JS),
 # so no server-side functions are needed — Netlify serves the files
 # straight from the "out/" directory.

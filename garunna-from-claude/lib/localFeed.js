@@ -1,7 +1,7 @@
 // Demo-only "community feed": stores parsed activity summaries in
 // localStorage so the landing page can show "other users' stats"
 // without standing up a real backend yet. Swap this out for a real
-// API route + database (Postgres, Supabase, etc.) once GARUNNA has one —
+// API route + database (Postgres, Supabase, etc.) once GARUNA has one —
 // nothing else in <FitReader> needs to change, it only calls these two
 // functions.
 
