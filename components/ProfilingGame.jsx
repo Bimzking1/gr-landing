@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/purity */
 'use client';
 
+import DotGrid from './DotGrid';
 import { useState, useMemo, useRef } from 'react';
 import { QUIZ_STEPS, RUNNER_ARCHETYPES, RARITY_CARDS, RARITY_STATS, matchRunnerType } from '@/lib/runnerTypes';
 import ShareCardModal from './ShareCardModalRunningProfile';
@@ -71,6 +72,7 @@ export default function ProfilingGame() {
   return (
     <>
       <section id="profiling" ref={sectionRef} className="relative py-24 px-6">
+        <DotGrid />
         <div className="max-w-3xl mx-auto glass-panel p-8 sm:p-12">
           {!result && (
             <div className="max-w-2xl mx-auto text-center mb-10">

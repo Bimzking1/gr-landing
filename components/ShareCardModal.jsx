@@ -57,7 +57,7 @@ function loadImage(src) {
   });
 }
 
-/* ── VIT rating card renderer (portrait only for Instagram Stories) ── */
+/* ── FIT rating card renderer (portrait only for Instagram Stories) ── */
 async function renderVitCard(data) {
   const w = 1080, h = 1920;
   const canvas = document.createElement('canvas');
@@ -135,9 +135,9 @@ async function renderVitCard(data) {
     ctx.textBaseline = 'middle';
     ctx.fillText('⭐', badgeX + 12, badgeY + badgeH2 / 2);
     ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    ctx.font = "bold 50px 'Anton', sans-serif";
+    ctx.font = "50px 'Anton', sans-serif";
     ctx.fillText(`${data.ovr || '--'}`, badgeX + 74, badgeY + 5 + badgeH2 / 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = "32px 'JetBrains Mono', monospace";
     ctx.fillText('OVR', badgeX + 150, badgeY + badgeH2 / 2);
   }
@@ -236,7 +236,7 @@ async function renderVitCard(data) {
 
   let curY = cardY + cardH + 6;
 
-  // VIT stats grid (2×5)
+  // FIT stats grid (2×5)
   let vitEndY;
 
   if (data.vitAttrs && data.vitAttrs.length > 0) {
@@ -265,17 +265,17 @@ async function renderVitCard(data) {
       ctx.fillText(attr.icon, gx + 18, gy + (rowH - 6) / 2 - 6);
 
       ctx.fillStyle = 'rgba(245,245,240,0.9)';
-      ctx.font = "bold 30px 'Anton', sans-serif";
+      ctx.font = "35px 'Anton', sans-serif";
       ctx.textAlign = 'right';
       ctx.fillText(`${attr.value}`, gx + colW - 16, gy + (rowH - 6) / 2 - 6);
 
       ctx.fillStyle = 'rgba(136,136,136,0.75)';
       ctx.font = "bold 18px 'JetBrains Mono', monospace";
       ctx.textAlign = 'left';
-      ctx.fillText(attr.label, gx + 64, gy + (rowH - 6) / 2 - 6);
+      ctx.fillText(attr.label, gx + 18, gy - 10 + (rowH - 6) / 2 - 6);
 
       const barX = gx + 18;
-      const barY = gy + (rowH - 6) / 2 + 20;
+      const barY = gy + (rowH - 6) / 2 + 12;
       const barW = colW - 36;
       const barH = 16;
       roundRect(ctx, barX, barY, barW, barH, barH / 2);
@@ -320,7 +320,7 @@ async function renderVitCard(data) {
 }
 
 /* ------------------------------------------------------------------
-   MAIN COMPONENT — VIT rating share modal only
+   MAIN COMPONENT — FIT rating share modal only
    ------------------------------------------------------------------ */
 export default function ShareCardModal({ isOpen, onClose, data }) {
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -403,7 +403,7 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-grey-600">
           <div>
-            <p className="font-display text-lg">Share your VIT Rating</p>
+            <p className="font-display text-lg">Share your FIT Rating</p>
             <p className="font-mono text-[11px] uppercase tracking-widest text-grey-400 mt-0.5">
               Portrait card for Instagram Stories
             </p>
@@ -432,7 +432,7 @@ export default function ShareCardModal({ isOpen, onClose, data }) {
                 </div>
               ) : previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={previewUrl} alt="VIT card preview" className="w-full h-full object-contain" />
+                <img src={previewUrl} alt="FIT card preview" className="w-full h-full object-contain" />
               ) : null}
             </div>
           </div>
