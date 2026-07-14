@@ -22,10 +22,10 @@ export default function Hero() {
           26 days before launch
         </span>
 
-        <h1 className="mt-8 font-display text-5xl sm:text-7xl leading-[0.95] tracking-tight animate-floatUp [animation-delay:100ms]">
-          RUN TODAY.
+        <h1 className="mt-8 font-display text-5xl md:text-[84px] leading-[1.2] tracking-tight animate-floatUp [animation-delay:100ms]">
+          OWN YOUR
           <br />
-          OWN YOUR <span className="text-lime">RUNNER</span> TYPE.
+          <span className="text-lime">RUNNER</span> CARD.
         </h1>
 
         <p className="mt-6 max-w-xl mx-auto text-grey-400 text-base sm:text-lg animate-floatUp [animation-delay:200ms]">
