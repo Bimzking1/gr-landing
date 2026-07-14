@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -36,17 +36,20 @@ export default function FitReader() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [dragOver, setDragOver] = useState(false);
-  const [feed, setFeed] = useState([]);
+  const feed = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener('storage', onStoreChange);
+      return () => window.removeEventListener('storage', onStoreChange);
+    },
+    () => getFeed(),
+    () => []
+  );
   const [vitResult, setVitResult] = useState(null);
   const [userName, setUserName] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
   const [cardRarity, setCardRarity] = useState('Common');
   const [cardRevealed, setCardRevealed] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-
-  useEffect(() => {
-    setFeed(getFeed());
-  }, []);
 
   function handleFile(file) {
     setError('');
@@ -99,7 +102,7 @@ export default function FitReader() {
           date: model.startDate ? model.startDate.toISOString() : null,
         };
         saveActivityToFeed(entry);
-        setFeed(getFeed());
+        window.dispatchEvent(new Event('storage'));
 
         setShowNameInput(true);
       } catch (err) {
@@ -410,6 +413,7 @@ export default function FitReader() {
                   </div>
 
                   <ShareCardModal
+                    key={shareOpen ? 'vit-open' : 'vit-closed'}
                     isOpen={shareOpen}
                     onClose={() => setShareOpen(false)}
                     data={shareData}

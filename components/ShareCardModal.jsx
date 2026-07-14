@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 /* ── colours ── */
 const C = {
@@ -323,30 +323,27 @@ async function renderVitCard(data) {
    MAIN COMPONENT — VIT rating share modal only
    ------------------------------------------------------------------ */
 export default function ShareCardModal({ isOpen, onClose, data }) {
-  const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [shareStatus, setShareStatus] = useState('');
   const canvasRef = useRef(null);
+  const generating = !previewUrl;
 
-  const generate = useCallback(() => {
-    if (!data) return;
-    setGenerating(true);
-    const doRender = async () => {
+  useEffect(() => {
+    if (!isOpen || !data) return;
+    let cancelled = false;
+    (async () => {
       try {
         const canvas = await renderVitCard(data);
-        setPreviewUrl(canvas.toDataURL('image/png'));
-        canvasRef.current = canvas;
+        if (!cancelled) {
+          canvasRef.current = canvas;
+          setPreviewUrl(canvas.toDataURL('image/png'));
+        }
       } catch (e) {
-        console.error('Card render error', e);
-      } finally {
-        setGenerating(false);
+        if (!cancelled) console.error('Card render error', e);
       }
-    };
-    doRender();
-  }, [data]);
-
-  useEffect(() => { if (isOpen && data) generate(); }, [isOpen, data, generate]);
-  useEffect(() => { if (!isOpen) { setPreviewUrl(null); setShareStatus(''); } }, [isOpen]);
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, data]);
 
   function getFilename() {
     const slug = (data?.title || 'garuna-result').toLowerCase().replace(/[^a-z0-9]+/g, '-');
