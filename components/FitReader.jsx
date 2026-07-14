@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useSyncExternalStore } from 'react';
+import DotGrid from './DotGrid';
 import dynamic from 'next/dynamic';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -135,7 +136,8 @@ export default function FitReader() {
 
   return (
     <section id="fit-reader" className="relative py-24 px-6">
-      <div className="max-w-3xl mx-auto glass-panel p-8 sm:p-12">
+      <DotGrid />
+      <div className="max-w-3xl mx-auto glass-panel p-8 sm:p-12 relative z-10">
         <div className="max-w-2xl mx-auto text-center mb-10">
           <span className="font-mono text-xs uppercase tracking-widest text-lime">Your data, decoded</span>
           <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">

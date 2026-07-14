@@ -4,7 +4,6 @@
 /* Design tokens — Tailwind v4 uses @theme instead of tailwind.config  */
 /* ------------------------------------------------------------------ */
 @theme {
-  /* Colors */
   --color-ink: #0a0a0a;
   --color-ink-soft: #111111;
   --color-ink-raised: #1e1e1e;
@@ -14,34 +13,28 @@
   --color-grey-600: #2a2a2a;
   --color-lime: #c8ff00;
   --color-lime-soft: #daf748;
-
-  /* Fonts */
   --font-display: 'Anton', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-
-  /* Letter spacing */
   --tracking-tightest: -0.03em;
-
-  /* Keyframes */
   --animate-shine: shine 3.5s linear infinite;
   --animate-floatUp: floatUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-pulseDot: pulseDot 2s ease-in-out infinite;
+}
 
-  @keyframes shine {
-    0% { background-position: 100% 0; }
-    100% { background-position: -100% 0; }
-  }
+@keyframes shine {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
 
-  @keyframes floatUp {
-    0% { opacity: 0; transform: translateY(18px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 
-  @keyframes pulseDot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,27 +58,14 @@ body {
   background-repeat: no-repeat;
 }
 
-/* Glass-panel — dark transparent backdrop with dot-grid pattern for the profiling game */
 .glass-panel {
-  background:
-    radial-gradient(rgba(245, 245, 240, 0.1) 1px, transparent 1px),
-    radial-gradient(rgba(245, 245, 240, 0.05) 1px, transparent 1px),
-    rgba(20, 20, 20, 0.85);
-  background-size: 24px 24px, 24px 24px, 100% 100%;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgb(16, 16, 16);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
 }
 
 .glass-panel-inner {
-  background:
-    radial-gradient(rgba(245, 245, 240, 0.04) 1px, transparent 1px),
-    radial-gradient(rgba(245, 245, 240, 0.02) 1px, transparent 1px),
-    rgba(20, 20, 20, 0.75);
-  background-size: 24px 24px, 24px 24px, 100% 100%;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgb(16, 16, 16);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 0.75rem;
 }
@@ -145,15 +125,10 @@ body {
   inset: 0;
   background-image: radial-gradient(rgba(200, 255, 0, 0.5) 1.5px, transparent 1.5px);
   background-size: 24px 24px;
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  opacity: 0.85;
   pointer-events: none;
   -webkit-mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 20%), black 0%, transparent 100%);
   mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 20%), black 0%, transparent 100%);
-}
-
-.dot-grid-wrap:hover .dot-grid-glow {
-  opacity: 1;
 }
 
 /* Leaflet dark tint so the map matches the terminal aesthetic */

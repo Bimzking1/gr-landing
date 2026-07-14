@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import DotGrid from './DotGrid';
 import { EXPERIENCE_LEVELS, SHOE_MODIFIERS, GOAL_MODIFIERS, computeProjection } from '@/lib/projection';
 import ShareCardModal from './ShareCardModalRunningProfile';
 
@@ -39,7 +40,8 @@ export default function ProjectionGame() {
   return (
     <>
       <section id="projection" className="relative border-b border-grey-600/40 py-24 px-6">
-        <div className="max-w-2xl mx-auto text-center">
+        <DotGrid />
+        <div className="max-w-2xl mx-auto text-center relative z-10">
           <span className="font-mono text-xs uppercase tracking-widest text-lime">Mini game</span>
           <h2 className="mt-3 font-display text-4xl sm:text-5xl leading-tight">
             PROJECT YOUR
@@ -52,7 +54,7 @@ export default function ProjectionGame() {
           </p>
         </div>
 
-        <div className="mt-10 max-w-md mx-auto rounded-2xl border border-grey-600/60 bg-ink-soft p-6 sm:p-8">
+        <div className="mt-10 max-w-md mx-auto rounded-2xl border border-grey-600/60 bg-ink-soft p-6 sm:p-8 relative z-10">
           <div className="space-y-6">
             <Picker
               label="How long have you been running?"
