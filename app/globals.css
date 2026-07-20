@@ -49,13 +49,102 @@ body {
   font-family: var(--font-body);
 }
 
-/* Full-page background image */
+/* Full-page background — now uses LoopingColumns component, kept as
+   fallback class only for the black base colour. */
 .page-bg {
-  background-image: url('/newer-design/background.webp');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  background: #000;
+}
+
+/* ------------------------------------------------------------------
+   Looping-columns background (grid-motion inspired)
+   ------------------------------------------------------------------ */
+.looping-columns {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  background: #000;
+  pointer-events: none;
+  margin: 0 20px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.looping-column {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.looping-column__track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.looping-column__track img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Upward scroll: start at 0, translate to -50% (one full image height) */
+.looping-column__track--up {
+  animation: scrollUp 30s linear infinite;
+}
+
+/* Downward scroll: start at -50%, translate to 0 */
+.looping-column__track--down {
+  animation: scrollDown 30s linear infinite;
+}
+
+@keyframes scrollUp {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scrollDown {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+
+/* Fade overlays — top and bottom gradient to black */
+.looping-columns__fade {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 25vh;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.looping-columns__fade--top {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 100%);
+}
+
+.looping-columns__fade--bottom {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 100%);
+}
+
+/* Responsive: 2 columns on mobile, hide columns 3 & 4 */
+@media (max-width: 768px) {
+  .looping-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .looping-column--desktop {
+    display: none;
+  }
 }
 
 .glass-panel {

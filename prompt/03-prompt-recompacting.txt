@@ -1,0 +1,33 @@
+This landing page needs refinements. Here some the prompts:
+
+1. Change the background image from Garuna.png to Frame1.png, Frame2.png, Frame3.png, Frame4.png, each after each other vertically.
+Currently its already done but the background still scrollable. it has to be unable to scroll (zoom out / in).
+and adjust the gap for each frame1, 2, 3 and 4 because its sometimes too far (the gap).
+
+2. Currently there are 3 mini games in it: User Profiling, Pace Projection, and .fit reader from user's activity.
+Now that games are too much and i want to make it more easier for user. I want you to combine those games.
+I think the pace projection has to be deleted (dont delete the file, just comment the parent's component of pace
+projection game). And the game user profiling and .fit reader has to be merged. So user flow are:
+- User input the same data as user profiling (questions answers, name, etc)
+- Then the preview card is appear.
+- The preview's output still the same (card, title, signature moves, gears, and spotify playlist). But add
+a button like "Import your data" below the card (above the signature moves and gears) to make user import their
+.fit file.
+- User can directly share the activity, but if the button import clicked, it will import the activity.
+- If the user only play the user profiling, the output is like that. But if user also import the .fit file,
+there will be the detailed stats below the user profiling (the UI is the same like existing: rating, activity, stats, etc)
+- If the user import the file, make the preview in desktop is landscape (left isde is the card, right side
+is the statistics). in mobile it still stacked vertically.
+- in mobile view, user has to choose the export image: export the user profiling or the star rating (like existing)
+- but in web view, user can export in mobile format (like prompt above and choose 
+user profiling / star rating), and desktop format (landscape view with combined with of user profiling and
+star rating)
+- the combined view in desktop only showing 1 card understand? use the card of user profiling and show the
+rating on the other placed
+
+3. make sure the runner archetypes scoring is valid. because after i tested it, dominantly
+appear the rarity uncommon and legendary. the other rarity are rare/never to be seen.
+make sure the chance is fair.
+
+mind the "Runner Archetypes Full Mapping - Scoring System.csv", or "Runner Archetypes Full Mapping - Scoring Validation.csv", or anything
+inside /runner-archetypes folders.

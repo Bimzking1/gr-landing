@@ -1,10 +1,9 @@
-import DotGrid from './DotGrid';
 import ShinyText from './ShinyText';
 
 export default function Hero() {
   return (
     <header className="relative overflow-hidden border-b border-grey-600/40">
-      <DotGrid />
+
       <nav className="relative z-10 flex items-center justify-between px-6 py-6 max-w-6xl mx-auto">
         <div className="flex items-center gap-2 font-display text-lg tracking-tight">
           <span className="inline-block h-2 w-2 rounded-full bg-lime animate-pulseDot" />
